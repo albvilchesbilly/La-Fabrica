@@ -31,6 +31,8 @@ jobs:
 
       - name: Verificar alcance, bloque 9 y agentes temporales
         id: portero
+        # shell: bash activa pipefail; sin él, `| tee` se traga el exit 1 del portero.
+        shell: bash
         env:
           PORTERO_BASE_REF: origin/${{ github.event.pull_request.base.ref }}
           PORTERO_HEAD_REF: ${{ github.event.pull_request.head.sha }}
