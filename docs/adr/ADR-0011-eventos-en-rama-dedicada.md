@@ -8,9 +8,9 @@
 
 El primer PR real de la fábrica (#1, el propio montaje) demostró que registrar el evento empujando un commit del orquestador a la rama del PR no funciona:
 
-- Cada verificación añade un commit `orquestador: evento…` al PR. El run que dispara ese push aparece como *failure* sin jobs, o no aparece: el head del PR queda sin check válido. Con branch protection y el check `portero` requerido, **ningún PR podría mergearse**.
+- Cada verificación añade un commit `orquestador: evento…` al PR. Los pushes hechos con el token de CI no disparan nuevos runs del workflow, así que ese commit —el head del PR— queda sin check. Con branch protection y el check `portero` requerido, **ningún PR podría mergearse**.
 - Cada evento de etiquetado (incluida la etiqueta que añade la herramienta de vigilancia del PR) generaba otro commit del orquestador. En diez minutos, dos commits ajenos en la rama del autor.
-- Un rechazo que empuja al PR y vuelve a disparar el workflow es un bucle en potencia.
+- Si esos pushes llegaran a disparar el workflow (credencial propia del orquestador en V0.2), un rechazo que empuja al PR sería un bucle: rechazo → commit → run → rechazo.
 
 Hay que mover el registro fuera de la rama del PR sin sacarlo de Git (ADR-0007) y sin que el orquestador escriba en `main`, que estará protegida.
 
