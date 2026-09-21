@@ -1,0 +1,8 @@
+# La constitución, los ADNs de los agentes, la configuración de CI y el
+# registro de eventos son rutas protegidas: cualquier cambio requiere
+# revisión de Billy.
+
+/constitucion/        @albvilchesbilly
+/agents/              @albvilchesbilly
+/.github/             @albvilchesbilly
+/memoria/eventos/     @albvilchesbilly
