@@ -1,0 +1,13 @@
+{
+  "name": "puerta-ia",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Módulo-puerta: único punto de llamada a la API de Anthropic en La Fábrica.",
+  "main": "puerta.js",
+  "scripts": {
+    "test": "node puerta.test.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.127.0"
+  }
+}
