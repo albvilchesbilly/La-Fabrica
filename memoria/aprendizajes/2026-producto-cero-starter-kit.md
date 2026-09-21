@@ -27,6 +27,16 @@
 - **Escribir el guion con el ADR de cada paso ya esbozado** (contexto y opciones), no solo el título. Redactar diez ADRs con bloque 9 completo fue la mitad del esfuerzo del montaje; buena parte del contexto estaba en la cabeza de quien escribió el guion y hubo que reconstruirlo.
 - **Decidir antes qué agente firma el montaje inicial.** El kit se construyó sin agente firmante porque ninguno tenía alcance para tocar la constitución. Es correcto, pero debería estar escrito en el guion: "el Paso 0 al 11 los ejecuta Billy con Claude Code como herramienta, fuera de la escala N0–N4".
 
+## Lo que enseñó el primer PR (#1, el propio montaje)
+
+El portero se estrenó contra este mismo PR y falló de tres maneras distintas en diez minutos. Ninguna la habrían encontrado las pruebas en local.
+
+- **El check estaba verde con el portero rechazando.** `node portero.js | tee` sin `pipefail`: el paso devolvía 0 aunque el script saliera con 1. Un mecanismo de "seguridad verificable" que aprueba todo es peor que no tenerlo. Corregido con `shell: bash` (activa `pipefail`). Lección: probar el *workflow*, no solo el script.
+- **Registrar el evento en la rama del PR rompe el merge.** Cada run empujaba un commit del orquestador al PR; el run que disparaba ese push aparecía como *failure* sin jobs. Con check requerido, ningún PR habría podido mergearse. Movido a la rama `memoria-eventos` (ADR-0011).
+- **El montaje no tenía firmante posible.** Ningún agente puede tocar `constitucion/` ni `agents/`, así que el propio kit no podía pasar su portero. Añadida la etiqueta `firmante:billy` (ADR-0012): el portero verifica forma, Billy juzga fondo.
+
+Balance: el primer PR no fue "el kit funcionando"; fue el kit descubriendo que tres de sus mecanismos no funcionaban. Eso es exactamente lo que el principio rector pide —construir, medir, aprender y mejorar— y la razón de que el historial de Git sea la evidencia y no el README.
+
 ## Antipatrones detectados
 
 - **Bloque 9 rellenado por inercia.** Riesgo real a partir del tercer o cuarto ADR: las objeciones empiezan a parecerse. La cláusula del ADR-0004 (agente provocador si degenera en ritual) existe por esto; conviene medirlo desde el primer producto real.

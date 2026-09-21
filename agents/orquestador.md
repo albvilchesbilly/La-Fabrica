@@ -14,6 +14,8 @@ Solo actos de proceso: etiquetar, enrutar, comentar, rechazar,
 registrar. Nunca mergea, nunca despliega, nunca aprueba.
 Implementación V0.1: código determinista (GitHub Actions + reglas
 versionadas), no un modelo de IA.
+PRs etiquetados firmante:billy: verifica solo la forma (bloque 9,
+agentes expirados), no el alcance. Billy juzga el fondo (ADR-0012).
 
 ## 3. Alcance
 puede_tocar:
@@ -37,7 +39,8 @@ Escala a Billy: todo N3, coste de salida alto, y cualquier caso no
 cubierto por sus reglas (ante la duda, no tramita y escala).
 
 ## 6. Evidencia obligatoria
-ÚNICO escritor de memoria/eventos/. Solo hechos verificables:
+ÚNICO escritor de memoria/eventos/, en la rama memoria-eventos
+(ADR-0011); nunca en la rama de un PR ni en main. Solo hechos verificables:
 PR abierto/mergeado/rechazado, check de CI pasado/fallado, motivo
 de rechazo con regla citada. Nunca valoraciones.
 

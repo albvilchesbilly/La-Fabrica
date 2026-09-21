@@ -13,7 +13,13 @@ const { execSync } = require('child_process');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const AGENTS_DIR = path.join(REPO_ROOT, 'agents');
-const EVENTOS_DIR = path.join(REPO_ROOT, 'memoria', 'eventos');
+// Los eventos viven en la rama memoria-eventos (ADR-0011); el workflow la
+// monta en un worktree y pasa su ruta aquí. Sin ella, se escribe en local.
+const EVENTOS_DIR = process.env.PORTERO_EVENTOS_DIR || path.join(REPO_ROOT, 'memoria', 'eventos');
+
+// Único firmante humano reconocido (ADR-0012). Sus PRs no se verifican por
+// alcance (Billy juzga el fondo); sí por forma (bloque 9, agentes expirados).
+const FIRMANTE_HUMANO = 'billy';
 
 // Rutas protegidas de forma global, independientemente del ADN del
 // agente firmante (regla 5: constitución protegida).
@@ -85,6 +91,14 @@ function findAgentIdFromPR(prLabels, prBranch) {
   return null;
 }
 
+function findFirmanteHumano(prLabels) {
+  for (const label of prLabels) {
+    const m = label.match(/^firmante:(.+)$/);
+    if (m) return m[1].trim();
+  }
+  return null;
+}
+
 function listAllAgentIds() {
   if (!fs.existsSync(AGENTS_DIR)) return [];
   return fs
@@ -148,12 +162,21 @@ function main() {
   const runUrl = process.env.PORTERO_RUN_URL || 'sin-url-de-run';
 
   const violations = [];
+  const summaryLines = [];
   const changedFiles = getChangedFiles(baseRef, headRef);
-  const agentId = findAgentIdFromPR(prLabels, prBranch);
+  const firmanteHumano = findFirmanteHumano(prLabels);
+  let agentId = findAgentIdFromPR(prLabels, prBranch);
 
-  if (!agentId) {
+  if (firmanteHumano) {
+    agentId = firmanteHumano;
+    if (firmanteHumano !== FIRMANTE_HUMANO) {
+      violations.push(`Firmante humano "${firmanteHumano}" no reconocido; solo "${FIRMANTE_HUMANO}" (ADR-0012).`);
+    } else {
+      summaryLines.push('Firmante humano: alcance no verificado (Billy juzga el fondo); se verifica la forma.');
+    }
+  } else if (!agentId) {
     violations.push(
-      'No se pudo identificar al agente firmante. Etiqueta el PR como "agente:<id>" o usa una rama "agente/<id>/...".'
+      'No se pudo identificar al firmante. Etiqueta el PR como "agente:<id>" (o rama "agente/<id>/...") o, si lo firma Billy, "firmante:billy".'
     );
   } else {
     const dna = readAgentDNA(agentId);
@@ -202,7 +225,6 @@ function main() {
   violations.push(...checkAdrConfrontacionCritica(changedFiles));
 
   const expiredAgents = checkExpiredTemporalAgents();
-  const summaryLines = [];
   if (expiredAgents.length > 0) {
     summaryLines.push(
       `Aviso: agentes temporales expirados en el repo (retirar su ADN): ${expiredAgents

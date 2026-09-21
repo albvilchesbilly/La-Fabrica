@@ -18,7 +18,7 @@ Cada paso del montaje entró en su propio commit, con su ADR correspondiente en 
 - `docs/adr/` — decisiones de arquitectura (Architecture Decision Records), una por decisión, nunca se borran (se marcan `superseded`).
 - `docs/policy-tecnologico.md` — stack por defecto, proveedor de IA, reglas de admisión de tecnología nueva.
 - `docs/limitaciones-v01.md` — deuda técnica declarada de esta versión y el criterio que la convierte en V0.2.
-- `memoria/eventos/` — registro append-only de hechos verificables (PRs, commits, CI), escrito únicamente por el orquestador.
+- `memoria/eventos/` — registro append-only de hechos verificables (PRs, commits, CI), escrito únicamente por el orquestador. El registro vive en la rama `memoria-eventos`; en `main` solo está el README que explica cómo leerlo.
 - `memoria/aprendizajes/` — lecciones documentadas tras cada producto, escritas por los agentes vía PR.
 - `.github/workflows/portero.yml` — el portero de CI: valida alcance, bloque de confrontación crítica y expiración de agentes temporales en cada PR.
 - `src/puerta-ia/` — módulo único de llamada a la API de Anthropic (módulo-puerta): ningún agente llama a la API directamente.
@@ -26,5 +26,6 @@ Cada paso del montaje entró en su propio commit, con su ADR correspondiente en 
 
 ## Acciones manuales pendientes (Claude Code no puede hacerlas)
 
-- Activar **branch protection** en la rama principal: revisión obligatoria, sin push directo, checks de CI requeridos.
+- Activar **branch protection** en la rama principal: revisión obligatoria, sin push directo, check `portero` requerido. No proteger la rama `memoria-eventos`: la escribe el orquestador.
 - Cargar la clave de API de Anthropic en los **Secrets de GitHub Actions** (nunca en el repo).
+- Etiquetar con `firmante:billy` los PRs que firma Billy (cambios constitucionales, ADNs, el propio portero); los de agentes llevan `agente:<id>`.

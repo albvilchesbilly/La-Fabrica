@@ -1,6 +1,6 @@
 # ADR-0007: memoria en Git, eventos solo del orquestador, aprendizajes por PR
 
-**Estado:** Aceptado
+**Estado:** Aceptado. Parcialmente superseded por el ADR-0011: los eventos siguen en Git y append-only, pero en la rama `memoria-eventos`, no en `main`.
 **Fecha:** 2026-09-21
 **Fecha de revisión futura:** cuando el volumen de eventos haga inviable el formato de texto plano (a definir por señal observable: tiempo de lectura/agregación, no fecha fija).
 
