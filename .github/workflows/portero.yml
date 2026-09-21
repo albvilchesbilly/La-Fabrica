@@ -1,0 +1,82 @@
+# Portero de CI — implementación V0.1 del orquestador como código
+# determinista (agents/orquestador.md, ADR-0003 y ADR-0009).
+#
+# En cada PR:
+#   1. Identifica al agente firmante (etiqueta "agente:<id>" o rama "agente/<id>/...").
+#   2. Lee su ADN y valida que el diff solo toca puede_tocar y nada de no_puede_tocar.
+#   3. Si el PR añade o modifica un ADR, verifica que el bloque "Confrontación crítica" existe.
+#   4. Comprueba que ningún agente temporal ha expirado.
+#   5. Registra el evento en memoria/eventos/ (append-only).
+#
+# Este workflow nunca mergea, nunca despliega, nunca aprueba: solo verifica y registra.
+
+name: Portero
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  portero:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Verificar alcance, bloque 9 y agentes temporales
+        id: portero
+        env:
+          PORTERO_BASE_REF: origin/${{ github.event.pull_request.base.ref }}
+          PORTERO_HEAD_REF: ${{ github.event.pull_request.head.sha }}
+          PORTERO_PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          PORTERO_PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          PORTERO_PR_NUMBER: ${{ github.event.pull_request.number }}
+          PORTERO_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node .github/scripts/portero.js 2>&1 | tee portero-salida.txt
+
+      # El evento se registra siempre, pase o falle la verificación.
+      # Solo funciona para PRs del propio repo (los forks no tienen token
+      # con permiso de escritura): limitación conocida de la V0.1.
+      - name: Registrar evento en memoria/eventos/
+        if: always() && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          git config user.name "orquestador"
+          git config user.email "orquestador@la-fabrica.local"
+          git add memoria/eventos/
+          if git diff --cached --quiet; then
+            echo "Sin evento nuevo que registrar."
+          else
+            git commit -m "orquestador: evento de portero para PR #${{ github.event.pull_request.number }}"
+            git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          fi
+
+      - name: Comentar rechazo en el PR
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const salida = fs.existsSync('portero-salida.txt')
+              ? fs.readFileSync('portero-salida.txt', 'utf8')
+              : '(sin salida)';
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: [
+                '**Portero de CI — rechazado**',
+                '',
+                'Motivo (con la regla incumplida):',
+                '```',
+                salida,
+                '```',
+                '',
+                'Este rechazo es reversible: corrige el alcance o el ADR y vuelve a empujar. Ver `agents/orquestador.md`.',
+              ].join('\n'),
+            });
