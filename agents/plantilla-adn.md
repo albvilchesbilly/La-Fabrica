@@ -42,11 +42,19 @@ si no hay respuesta, el techo de autonomía es N1.
 Bajo qué condiciones medibles sube de nivel, se degrada o se retira.
 
 ## 9. Confrontación crítica
-Solo aplica a agentes que proponen decisiones de construir. Antes de
-pasar una propuesta a "construir": mínimo 3 objeciones serias
-(abogado del diablo), prueba de simplicidad (¿qué versión más simple
-resuelve el 80%?), prueba de reversibilidad (coste de salida a 3
-meses), veto a dependencias opacas, y nivel de provocación aplicado
-(P0–P4). Sin este bloque completo, el orquestador rechaza la
-decisión.
+Solo aplica a agentes que proponen decisiones de construir (ver
+reparto de papeles más abajo). Antes de pasar una propuesta a
+"construir": mínimo 3 objeciones serias (abogado del diablo), prueba
+de simplicidad (¿qué versión más simple resuelve el 80%?), prueba de
+reversibilidad (coste de salida a 3 meses), veto a dependencias
+opacas, y nivel de provocación aplicado (P0–P4). Sin este bloque
+completo, el orquestador rechaza la decisión.
 ```
+
+## Reparto de papeles
+
+- **Quien propone, confronta** (bloque 9): el agente que propone una decisión de construir es quien debe atacarla primero.
+- **El orquestador verifica la forma**: no juzga si la confrontación es buena, solo que el bloque existe y está completo.
+- **Billy juzga el fondo** en las propuestas de nivel N3.
+
+Si en los niveles inferiores la autoconfrontación degenera en un ritual vacío (bloque 9 relleno por rutina, sin objeciones reales), se extraerá un agente provocador independiente cuya única misión sea confrontar propuestas ajenas.
