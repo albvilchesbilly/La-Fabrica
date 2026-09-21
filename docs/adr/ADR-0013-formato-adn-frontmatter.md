@@ -1,6 +1,6 @@
 # ADR-0013: formato de los ADNs — cabecera YAML restringida y cuerpo Markdown
 
-**Estado:** Propuesto (agente `cto-ia`, N1: propone en rama; integra Billy). Si se acepta, supersede parcialmente al ADR-0002 (formato de la plantilla).
+**Estado:** Propuesto (agente `cto-ia`, N1). Decisión de Billy (2026-09-21): se adopta la **alternativa mínima** del bloque 9 — el portero rechaza todo ADN sin `puede_tocar` o `no_puede_tocar` legibles — y la migración de formato queda pendiente hasta que exista un cuarto ADN. Si entonces se acepta, supersede parcialmente al ADR-0002 (formato de la plantilla).
 **Fecha:** 2026-09-21
 **Fecha de revisión futura:** tras el primer ADN escrito con el nuevo formato, o cuando haya más de 5 ADNs — lo que ocurra antes.
 

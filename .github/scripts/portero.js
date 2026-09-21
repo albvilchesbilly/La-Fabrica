@@ -189,8 +189,14 @@ function main() {
         violations.push(`El agente "${agentId}" es temporal y expiró el ${expira}. Sus credenciales están muertas.`);
       }
 
-      const puedeTocar = pathLikePrefixes(extractList(dna, 'puede_tocar'));
-      const noPuedeTocar = pathLikePrefixes(extractList(dna, 'no_puede_tocar'));
+      const puedeTocarItems = extractList(dna, 'puede_tocar');
+      const noPuedeTocarItems = extractList(dna, 'no_puede_tocar');
+      // Un ADN sin alcance declarado no se aprueba por omisión (ADR-0013, alternativa mínima).
+      if (puedeTocarItems.length === 0 || noPuedeTocarItems.length === 0) {
+        violations.push(`agents/${agentId}.md: sin puede_tocar o no_puede_tocar legibles; sin alcance declarado no hay verificación (ADR-0013).`);
+      }
+      const puedeTocar = pathLikePrefixes(puedeTocarItems);
+      const noPuedeTocar = pathLikePrefixes(noPuedeTocarItems);
 
       for (const file of changedFiles) {
         if (file.startsWith('memoria/eventos/')) {
