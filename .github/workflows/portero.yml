@@ -1,12 +1,16 @@
 # Portero de CI — implementación V0.1 del orquestador como código
-# determinista (agents/orquestador.md, ADR-0003 y ADR-0009).
+# determinista (agents/orquestador.md, ADR-0003, ADR-0009, ADR-0011, ADR-0012).
 #
 # En cada PR:
-#   1. Identifica al agente firmante (etiqueta "agente:<id>" o rama "agente/<id>/...").
-#   2. Lee su ADN y valida que el diff solo toca puede_tocar y nada de no_puede_tocar.
+#   1. Identifica al firmante: etiqueta "agente:<id>" (o rama "agente/<id>/...")
+#      o, para PRs de Billy, etiqueta "firmante:billy".
+#   2. Lee el ADN del agente y valida que el diff solo toca puede_tocar y nada
+#      de no_puede_tocar. Con firmante:billy no se verifica alcance (Billy
+#      juzga el fondo), solo forma.
 #   3. Si el PR añade o modifica un ADR, verifica que el bloque "Confrontación crítica" existe.
 #   4. Comprueba que ningún agente temporal ha expirado.
-#   5. Registra el evento en memoria/eventos/ (append-only).
+#   5. Registra el evento en memoria/eventos/ de la rama memoria-eventos
+#      (append-only). Nunca escribe en la rama del PR ni en main.
 #
 # Este workflow nunca mergea, nunca despliega, nunca aprueba: solo verifica y registra.
 
@@ -20,6 +24,11 @@ permissions:
   contents: write
   pull-requests: write
 
+# Serializa los runs para que dos PRs no empujen a memoria-eventos a la vez.
+concurrency:
+  group: portero-eventos
+  cancel-in-progress: false
+
 jobs:
   portero:
     runs-on: ubuntu-latest
@@ -29,8 +38,26 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
 
+      # Monta la rama memoria-eventos en un worktree aparte. Si aún no existe,
+      # nace huérfana con el contenido actual de memoria/eventos/ (README y
+      # eventos previos al cambio de rama, si los hubiera).
+      - name: Preparar rama de eventos
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        shell: bash
+        run: |
+          if git ls-remote --exit-code --heads origin memoria-eventos >/dev/null 2>&1; then
+            git fetch origin memoria-eventos
+            git worktree add _eventos origin/memoria-eventos
+          else
+            git worktree add --orphan -b memoria-eventos _eventos
+            mkdir -p _eventos/memoria/eventos
+            cp -r memoria/eventos/. _eventos/memoria/eventos/
+          fi
+
       - name: Verificar alcance, bloque 9 y agentes temporales
         id: portero
+        # shell: bash activa pipefail; sin él, `| tee` se traga el exit 1 del portero.
+        shell: bash
         env:
           PORTERO_BASE_REF: origin/${{ github.event.pull_request.base.ref }}
           PORTERO_HEAD_REF: ${{ github.event.pull_request.head.sha }}
@@ -38,22 +65,25 @@ jobs:
           PORTERO_PR_BRANCH: ${{ github.event.pull_request.head.ref }}
           PORTERO_PR_NUMBER: ${{ github.event.pull_request.number }}
           PORTERO_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          PORTERO_EVENTOS_DIR: ${{ github.workspace }}/_eventos/memoria/eventos
         run: node .github/scripts/portero.js 2>&1 | tee portero-salida.txt
 
       # El evento se registra siempre, pase o falle la verificación.
-      # Solo funciona para PRs del propio repo (los forks no tienen token
-      # con permiso de escritura): limitación conocida de la V0.1.
-      - name: Registrar evento en memoria/eventos/
+      # Solo para PRs del propio repo (los forks no tienen token con permiso
+      # de escritura): limitación conocida de la V0.1.
+      - name: Registrar evento en memoria-eventos
         if: always() && github.event.pull_request.head.repo.full_name == github.repository
+        shell: bash
         run: |
+          cd _eventos
           git config user.name "orquestador"
           git config user.email "orquestador@la-fabrica.local"
-          git add memoria/eventos/
+          git add memoria/eventos
           if git diff --cached --quiet; then
             echo "Sin evento nuevo que registrar."
           else
             git commit -m "orquestador: evento de portero para PR #${{ github.event.pull_request.number }}"
-            git push origin HEAD:${{ github.event.pull_request.head.ref }}
+            git push origin HEAD:memoria-eventos
           fi
 
       - name: Comentar rechazo en el PR

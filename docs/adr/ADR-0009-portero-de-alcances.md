@@ -1,6 +1,6 @@
 # ADR-0009: portero de alcances como implementación de "seguridad verificable antes de ejecutar"
 
-**Estado:** Aceptado
+**Estado:** Aceptado. El paso 5 (registro del evento en la rama del PR) está superseded por el ADR-0011; la identificación del firmante se amplía en el ADR-0012 (`firmante:billy`).
 **Fecha:** 2026-09-21
 **Fecha de revisión futura:** tras el primer producto terminado, o al primer rechazo disputado que el portero pierda — lo que ocurra antes.
 
