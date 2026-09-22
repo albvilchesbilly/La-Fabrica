@@ -261,3 +261,5 @@ function main() {
 }
 
 main();
+
+// prueba de humo: el cto-ia no puede tocar el portero
